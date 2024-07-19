@@ -47,6 +47,11 @@ android {
     lintOptions {
         disable 'InvalidPackage' // Disable lint checking for invalid package names
     }
+
+    task wrapper(type: Wrapper) {
+        gradleVersion = '7.0' // Use the Gradle version you want
+    }
+
 }
 
 flutter {

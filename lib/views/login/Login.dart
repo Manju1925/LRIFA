@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gkvk/constants/auth.dart'; // Ensure this path is correct for your project structure
 import 'package:flutter/material.dart';
 import 'package:gkvk/shared/components/CustomAlertDialog.dart';
 import 'package:gkvk/shared/components/CustomTextButton.dart';
@@ -12,14 +13,62 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage>
-    with SingleTickerProviderStateMixin {
-  // text controllers
+class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+  String? errorMessage = '';
+  bool isLogin = true;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
+
+  Future<void> signInWithEmailAndPassword() async {
+    try {
+      await Auth().signInWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        errorMessage = e.message;
+      });
+      showDialog(
+        context: context,
+        builder: (context) => CustomAlertDialog(
+          title: 'Login Error',
+          content: e.message ?? 'An unknown error occurred',
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      );
+    }
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your email';
+    }
+    if (!value.contains('@')) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your password';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    return null;
+  }
 
   @override
   void initState() {
@@ -93,7 +142,7 @@ class _LoginPageState extends State<LoginPage>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Image.asset(
-                                'assets/images/LRIFA.png',
+                                'assets/images/CoE-WM.png',
                                 width: 100,
                                 height: 100,
                               ),
@@ -144,39 +193,15 @@ class _LoginPageState extends State<LoginPage>
                                 text: "Sign In",
                                 buttonColor: const Color(0xFFFB812C),
                                 onPressed: () async {
-                                  if (validateEmail(emailController.text) ==
-                                          null &&
-                                      validatePassword(
-                                              passwordController.text) ==
-                                          null) {
-                                    try {
-                                      await login();
-                                      Navigator.of(context).pushReplacement(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const HomeScreen(),
-                                        ),
-                                      );
-                                    } catch (e) {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) => CustomAlertDialog(
-                                          title: 'Login Error',
-                                          content:
-                                              'Please enter valid email and password.',
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      );
-                                    }
+                                  if (validateEmail(emailController.text) == null &&
+                                      validatePassword(passwordController.text) == null) {
+                                    await signInWithEmailAndPassword();
                                   } else {
                                     showDialog(
                                       context: context,
                                       builder: (context) => CustomAlertDialog(
                                         title: 'Login Error',
-                                        content:
-                                            'Please enter valid email and password.',
+                                        content: 'Please enter valid email and password.',
                                         onPressed: () {
                                           Navigator.of(context).pop();
                                         },
@@ -185,6 +210,14 @@ class _LoginPageState extends State<LoginPage>
                                   }
                                 },
                               ),
+                              if (errorMessage != null && errorMessage!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: Text(
+                                    errorMessage!,
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -206,33 +239,6 @@ class _LoginPageState extends State<LoginPage>
           }
         },
       ),
-    );
-  }
-
-  String? validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your email';
-    }
-    if (!value.contains('@')) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  }
-
-  String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter your password';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters long';
-    }
-    return null;
-  }
-
-  Future<void> login() async {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
     );
   }
 }

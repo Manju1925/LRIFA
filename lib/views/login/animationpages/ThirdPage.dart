@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:gkvk/views/home/home_view.dart';
 import 'package:gkvk/views/login/Login.dart';
+import 'package:gkvk/constants/auth.dart'; // Import your Auth class
 
 class ThirdPage extends StatefulWidget {
   const ThirdPage({super.key});
@@ -12,10 +12,10 @@ class ThirdPage extends StatefulWidget {
   _ThirdPageState createState() => _ThirdPageState();
 }
 
-class _ThirdPageState extends State<ThirdPage>
-    with SingleTickerProviderStateMixin {
+class _ThirdPageState extends State<ThirdPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
+  final Auth _auth = Auth(); // Create an instance of Auth
 
   @override
   void initState() {
@@ -39,28 +39,21 @@ class _ThirdPageState extends State<ThirdPage>
   }
 
   Future<void> _checkAuthState() async {
-    User? user = FirebaseAuth.instance.currentUser;
+    User? user = _auth.currentUser;
 
     if (user != null) {
       // User is signed in
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const HomeScreen()),
-        (route) =>
-            false, // This makes sure all other routes are removed from the stack
+            (route) => false, // This makes sure all other routes are removed from the stack
       );
     } else {
       // User is not signed in
-
-      // Request permissions
-      await _requestPermissions();
-
-      // Navigate to login page
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const LoginPage(),
+          pageBuilder: (context, animation, secondaryAnimation) => const LoginPage(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
               opacity: animation,
@@ -69,22 +62,6 @@ class _ThirdPageState extends State<ThirdPage>
           },
         ),
       );
-    }
-  }
-
-  Future<void> _requestPermissions() async {
-    // Request camera permission
-    final cameraStatus = await Permission.camera.request();
-    if (!cameraStatus.isGranted) {
-      // Handle camera permission denied
-      print("Camera permission denied");
-    }
-
-    // Request photo library permission
-    final photoStatus = await Permission.photos.request();
-    if (!photoStatus.isGranted) {
-      // Handle photo library permission denied
-      print("Photo library permission denied");
     }
   }
 
@@ -105,29 +82,10 @@ class _ThirdPageState extends State<ThirdPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Image.asset(
-                'assets/images/LRIFA.png',
+                'assets/images/CoE-WM.png',
                 width: 300,
                 height: 300,
               ),
-              // Text(
-              //   'LRI based Fertilizer Application',
-              //   style: TextStyle(
-              //     fontSize: 24,
-              //     fontWeight: FontWeight.bold,
-              //     color: Color(0xFFFB812C),
-              //   ),
-              //   textAlign: TextAlign.center,
-              // ),
-              // SizedBox(height: 10),
-              // Text(
-              //   'CoEWM',
-              //   style: TextStyle(
-              //     fontSize: 24,
-              //     fontWeight: FontWeight.bold,
-              //     color: Color(0xFFFB812C),
-              //   ),
-              //   textAlign: TextAlign.center,
-              // ),
             ],
           ),
         ),
